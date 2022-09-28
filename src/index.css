@@ -1,0 +1,45 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  background-color: rgb(37, 36, 36);
+  height: 100%;
+  width: 100%;
+}
+
+.board-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #312e2b;
+}
+
+.board {
+  background-color: blue;
+  height: 100vh;
+  width: 100vh;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.square {
+  height: 12.5vh;
+  width: 12.5vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.piece {
+  height: 2.5vh;
+  width: 2.5vh;
+  background-color: blue;
+  border-radius: 50%;
+}
