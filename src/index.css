@@ -6,32 +6,26 @@ body {
   overflow: hidden;
 }
 
-#root {
-  background-color: rgb(37, 36, 36);
-  height: 100%;
-  width: 100%;
-}
-
 .board-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
   background-color: #312e2b;
+  height: 100vh;
 }
 
 .board {
   background-color: blue;
-  height: 100vh;
-  width: 100vh;
+  height: 90vh;
+  width: 90vh;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
 }
 
 .square {
-  height: 12.5vh;
-  width: 12.5vh;
+  height: 11.25vh;
+  width: 11.25vh;
   display: flex;
   align-items: center;
   justify-content: center;
