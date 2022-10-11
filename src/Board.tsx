@@ -19,27 +19,56 @@ function Board() {
       for (let j = 0; j < tamanho; j++) {
         array.push({
           position: yCoord[j] + xCoord[i],
-          color: getCor(i, j),
+          color: i % 2 == j % 2 ? "#ebecd0" : "#779556",
         });
       }
     }
     setSquares(array);
   }, []);
+  let activePiece: HTMLElement | null = null;
 
-  function getCor(i: number, j: number) {
-    if (i % 2 == 0) {
-      return j % 2 == 0 ? "white" : "black";
-    } else {
-      return j % 2 == 0 ? "black" : "white";
+  function grabPiece(e: React.MouseEvent) {
+    const element = e.target as HTMLElement;
+    if (element.classList.contains("piece")) {
+      const x = e.clientX - 50;
+      const y = e.clientY - 50;
+      element.style.position = "absolute";
+      element.style.top = `${y}px`;
+      element.style.left = `${x}px`;
+
+      activePiece = element;
+    }
+  }
+
+  function movePiece(e: React.MouseEvent) {
+    if (activePiece) {
+      const x = e.clientX - 50;
+      const y = e.clientY - 50;
+      activePiece.style.position = "absolute";
+      activePiece.style.top = `${y}px`;
+      activePiece.style.left = `${x}px`;
+    }
+  }
+
+  function dropPiece(e: React.MouseEvent) {
+    if (activePiece) {
+      activePiece = null;
     }
   }
 
   return (
-    <div className="board">
+    <div
+      onMouseDown={(e) => grabPiece(e)}
+      onMouseMove={(e) => movePiece(e)}
+      onMouseUp={(e) => dropPiece(e)}
+      className="board"
+    >
       {squares?.map((square, i) => (
-        <div key={square.position}>
-          <Square position={square.position} color={square.color} />
-        </div>
+        <Square
+          key={square.position}
+          position={square.position}
+          color={square.color}
+        />
       ))}
     </div>
   );

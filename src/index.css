@@ -15,25 +15,40 @@ body {
 }
 
 .board {
-  background-color: blue;
-  height: 90vh;
-  width: 90vh;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  height: 800px;
+  width: 800px;
+  display: grid;
+  grid-template-columns: repeat(8, 100px);
 }
 
 .square {
-  height: 11.25vh;
-  width: 11.25vh;
+  height: 100px;
+  width: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.piece {
-  height: 2.5vh;
-  width: 2.5vh;
-  background-color: blue;
-  border-radius: 50%;
+.pieceImage {
+  width: 100px;
+  height: 100px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 80px;
+}
+
+.pieceImage:hover {
+  cursor: grab;
+}
+
+.pieceImage:active {
+  cursor: grabbing;
+}
+
+.white {
+  color: white;
+}
+
+.black {
+  color: black;
 }
