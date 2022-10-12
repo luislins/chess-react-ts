@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Square from "./Square";
 
 type SquareProps = {
@@ -7,6 +7,7 @@ type SquareProps = {
 };
 
 function Board() {
+  const boardRef = useRef<HTMLDivElement>(null);
   const tamanho = 8;
   const xCoord = [8, 7, 6, 5, 4, 3, 2, 1];
   const yCoord = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -41,17 +42,40 @@ function Board() {
   }
 
   function movePiece(e: React.MouseEvent) {
-    if (activePiece) {
+    const board = boardRef.current;
+    if (activePiece && board) {
+      const minX = board.offsetLeft - 25;
+      const minY = board.offsetTop - 25;
+
+      const maxX = board.clientHeight + board.offsetLeft - 75;
+      const maxY = board.clientWidth;
       const x = e.clientX - 50;
       const y = e.clientY - 50;
       activePiece.style.position = "absolute";
-      activePiece.style.top = `${y}px`;
-      activePiece.style.left = `${x}px`;
+
+      // Minimo
+      if (x < minX) {
+        activePiece.style.left = `${minX}px`;
+      } else if (x > maxX) {
+        activePiece.style.left = `${maxX}px`;
+      } else {
+        activePiece.style.left = `${x}px`;
+      }
+      if (y < minY) {
+        activePiece.style.top = `${minY}px`;
+      } else if (y > maxY) {
+        activePiece.style.top = `${maxY}px`;
+      } else {
+        activePiece.style.top = `${y}px`;
+      }
     }
   }
+  // const xCoord = [8, 7, 6, 5, 4, 3, 2, 1];
+  // const yCoord = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
   function dropPiece(e: React.MouseEvent) {
-    if (activePiece) {
+    const board = boardRef.current;
+    if (activePiece && board) {
       activePiece = null;
     }
   }
@@ -62,6 +86,8 @@ function Board() {
       onMouseMove={(e) => movePiece(e)}
       onMouseUp={(e) => dropPiece(e)}
       className="board"
+      id="board"
+      ref={boardRef}
     >
       {squares?.map((square, i) => (
         <Square

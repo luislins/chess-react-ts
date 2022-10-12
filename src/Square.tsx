@@ -12,7 +12,7 @@ function Square(props: SquareProps) {
   initialPiecePosition.set("c", "bishop");
   initialPiecePosition.set("d", "queen");
   initialPiecePosition.set("e", "king");
-  initialPiecePosition.set("f", "rook");
+  initialPiecePosition.set("f", "bishop");
   initialPiecePosition.set("g", "horse");
   initialPiecePosition.set("h", "rook");
 
