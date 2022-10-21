@@ -30,19 +30,9 @@ body {
 }
 
 .pieceImage {
-  width: 100px;
-  height: 100px;
   background-repeat: no-repeat;
   background-position: center;
   background-size: 80px;
-}
-
-.pieceImage:hover {
-  cursor: grab;
-}
-
-.pieceImage:active {
-  cursor: grabbing;
 }
 
 .white {
@@ -51,4 +41,11 @@ body {
 
 .black {
   color: black;
+}
+
+.indicator {
+  height: 30%;
+  width: 30%;
+  background-color: #d6d6bd;
+  border-radius: 100%;
 }
