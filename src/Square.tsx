@@ -1,45 +1,69 @@
-import Piece from "./Piece";
+import { useEffect, useState } from "react";
+import { COLORS } from "./colors";
 
 type SquareProps = {
-  position: string;
-  color: string;
+  x: number;
+  y: number;
+  backgroundColor: string;
+  piece: string | undefined;
+  pieceColor: string | undefined;
 };
 
 function Square(props: SquareProps) {
-  const initialPiecePosition = new Map();
-  initialPiecePosition.set("a", "rook");
-  initialPiecePosition.set("b", "horse");
-  initialPiecePosition.set("c", "bishop");
-  initialPiecePosition.set("d", "queen");
-  initialPiecePosition.set("e", "king");
-  initialPiecePosition.set("f", "bishop");
-  initialPiecePosition.set("g", "horse");
-  initialPiecePosition.set("h", "rook");
+  const [piece, setPiece] = useState<string | undefined>();
+  const [pieceColor, setPieceColor] = useState<string | undefined>();
+  const [backgroundColor, setBackgroundColor] = useState<string | undefined>(
+    ""
+  );
+  const [indicator, showIndicator] = useState<boolean>(false);
 
-  function renderPiece(props: SquareProps) {
-    if (
-      props.position.includes("8") ||
-      (props.position.includes("1") &&
-        initialPiecePosition.get(props.position.replace(/[0-9]/g, "")))
-    ) {
-      return (
-        <Piece
-          position={props.position}
-          type={initialPiecePosition.get(props.position.replace(/[0-9]/g, ""))}
-        />
-      );
-    } else if (props.position.includes("7") || props.position.includes("2")) {
-      return <Piece position={props.position} type="pawn" />;
-    }
+  useEffect(() => {
+    setPiece(props.piece);
+    setPieceColor(props.pieceColor);
+    setBackgroundColor(props.backgroundColor);
+  }, [props.piece, props.pieceColor]);
+
+  function highlightPieceRightClick() {
+    const redColorBg =
+      backgroundColor == COLORS.light_square_green ? "#d46c51" : "#ec7e6a";
+    setBackgroundColor(
+      backgroundColor != redColorBg ? redColorBg : props.backgroundColor
+    );
   }
+  function highlightPieceLeftClick() {
+    setBackgroundColor(
+      backgroundColor != COLORS.yellow_squared_active
+        ? COLORS.yellow_squared_active
+        : props.backgroundColor
+    );
+    //provavelmtne com context
+  }
+
+  const hintColor =
+    backgroundColor == COLORS.light_square_green ? "#d6d6bd" : "#6a874d";
 
   return (
     <div
-      id={props.position}
-      style={{ backgroundColor: props.color }}
-      className="square"
+      onContextMenu={() => highlightPieceRightClick()}
+      // onClick={() => highlightPieceLeftClick()}
+      id={props.x + "" + props.y}
+      style={{
+        backgroundImage:
+          piece && pieceColor
+            ? `url(/assets/pieceImages/${piece + "_" + pieceColor}.png)`
+            : "",
+        backgroundColor: backgroundColor,
+      }}
+      className={`square pieceImage ${piece ? piece : ""}`}
     >
-      {renderPiece(props)}
+      {indicator && (
+        <div
+          style={{
+            backgroundColor: hintColor,
+          }}
+          className="indicator"
+        ></div>
+      )}
     </div>
   );
 }
