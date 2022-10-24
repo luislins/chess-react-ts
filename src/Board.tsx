@@ -140,12 +140,15 @@ function Board() {
     //Specific Rules per type
     let validPositions: string[] = [];
     if (pieceBefore == "pawn") {
+      const X = Number(startX + "" + startY);
+      const moveQuantity = (color == "white" && X >= 60 && X <= 67) || (color == "black" && X >= 10 && X <= 17) ? 2 : 1;
+      console.log(moveQuantity);
       //Cant move horizontally
       if (endY != startY) {
         return false;
       }
-      // Can move only one time WIP
-      if (Math.abs(startX - endX) > 1 || Math.abs(startY - endY) > 1) {
+      // Can move only one time WIP or two time if first move
+      if (Math.abs(startX - endX) > moveQuantity || Math.abs(startY - endY) > moveQuantity) {
         return false;
       }
 
