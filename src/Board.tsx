@@ -148,28 +148,58 @@ function Board() {
     const color = squareBeforeObj.pieceColor;
 
     //Checks only if piece are moving acoordingly to the type
-    if (!isValidMove(squareBeforeObj.x, squareBeforeObj.y, squareAfterObj.x, squareAfterObj.y, pieceBefore)) {
-      return false;
-    }
+    const startX = squareBeforeObj.x;
+    const startY = squareBeforeObj.y;
+    const endX = squareAfterObj.x;
+    const endY = squareAfterObj.y;
 
-    //Specifics rules
+    //General rules
 
     //Dont take piece of same color
     if (squareBeforeObj.pieceColor && squareAfterObj.pieceColor && squareBeforeObj.pieceColor == squareAfterObj.pieceColor) {
       return false;
     }
 
+    //Specific Rules per type
+    let validPositions: string[] = [];
     if (pieceBefore == "pawn") {
-      //Pawn can only go one direction depending color
+      //Cant move horizontally
+      if (endY != startY) {
+        return false;
+      }
+      // Can move only one time WIP
+      if (Math.abs(startX - endX) > 1 || Math.abs(startY - endY) > 1) {
+        return false;
+      }
+
+      // Move in only one direction depending color
       if (color == "black") {
-        if (squareAfterObj.x < squareBeforeObj.x) {
+        if (endX < startX) {
           return false;
         }
       } else if (color == "white") {
-        if (squareAfterObj.x > squareBeforeObj.x) {
+        if (endX > startX) {
           return false;
         }
       }
+      validPositions = validPositionsHook(startX, startY);
+    } else if (pieceBefore == "rook") {
+      validPositions = validPositionsHook(startX, startY);
+    } else if (pieceBefore == "bishop") {
+      validPositions = validPositionsBishop(startX, startY);
+    } else if (pieceBefore == "horse") {
+      validPositions = validPositionsHorse(startX, startY);
+    } else if (pieceBefore == "queen") {
+      validPositions = validPositionsHook(startX, startY).concat(validPositionsBishop(startX, startY));
+    } else if (pieceBefore == "king") {
+      if (Math.abs(startX - endX) > 1 || Math.abs(startY - endY) > 1) {
+        return false;
+      }
+      validPositions = validPositionsHook(startX, startY).concat(validPositionsBishop(startX, startY));
+    }
+
+    if (!validPositions.includes(endX + "" + endY)) {
+      return false;
     }
     return true;
   }
