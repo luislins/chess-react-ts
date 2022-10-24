@@ -58,10 +58,7 @@ function Board() {
         board.push({
           x: i,
           y: j,
-          backgroundColor:
-            i % 2 == j % 2
-              ? COLORS.light_square_green
-              : COLORS.dark_square_green,
+          backgroundColor: i % 2 == j % 2 ? COLORS.light_square_green : COLORS.dark_square_green,
           piece: getPiece(i, j),
           pieceColor: getPieceColor(i, j),
         });
@@ -82,29 +79,88 @@ function Board() {
     }
   }
 
-  function canMovePiece(
-    arrayAux: SquareProps[],
-    positionBefore: string,
-    positionAfter: string,
-    pieceBefore: string
-  ) {
+  function validPositionsHook(startX: number, startY: number) {
+    let validPositionsHook = [];
+    for (let i = 0; i < 8; i++) {
+      validPositionsHook.push(startX + "" + (startY + i));
+      validPositionsHook.push(startX + i + "" + startY);
+      validPositionsHook.push(startX + "" + Math.abs(startY - i));
+      validPositionsHook.push(Math.abs(startX - i) + "" + startY);
+    }
+    return validPositionsHook;
+  }
+
+  function validPositionsBishop(startX: number, startY: number) {
+    let validPositionsBishop = [];
+    for (let i = 0; i < 8; i++) {
+      validPositionsBishop.push(startX + i + "" + (startY + i));
+      validPositionsBishop.push(startX + i + "" + Math.abs(startY - i));
+      validPositionsBishop.push(Math.abs(startX - i) + "" + Math.abs(startY + i));
+      validPositionsBishop.push(Math.abs(startX - i) + "" + Math.abs(startY - i));
+    }
+    return validPositionsBishop;
+  }
+
+  function validPositionsHorse(startX: number, startY: number) {
+    let validPositionsHorse = [];
+    validPositionsHorse.push(startX + 1 + "" + (startY + 2));
+    validPositionsHorse.push(startX + 1 + "" + (startY - 2));
+    validPositionsHorse.push(startX - 1 + "" + (startY + 2));
+    validPositionsHorse.push(startX - 1 + "" + (startY - 2));
+    validPositionsHorse.push(startX + 2 + "" + (startY + 1));
+    validPositionsHorse.push(startX + 2 + "" + (startY - 1));
+    validPositionsHorse.push(startX - 2 + "" + (startY - 1));
+    validPositionsHorse.push(startX - 2 + "" + (startY + 1));
+    return validPositionsHorse;
+  }
+
+  function isValidMove(startX: number, startY: number, endX: number, endY: number, pieceBefore: string) {
+    let validPositions: string[] = [];
+    if (pieceBefore == "pawn") {
+      if (Math.abs(startX - endX) > 1 || Math.abs(startY - endY) > 1) {
+        return false;
+      }
+      validPositions = validPositionsHook(startX, startY);
+    } else if (pieceBefore == "rook") {
+      validPositions = validPositionsHook(startX, startY);
+    } else if (pieceBefore == "bishop") {
+      validPositions = validPositionsBishop(startX, startY);
+    } else if (pieceBefore == "horse") {
+      validPositions = validPositionsHorse(startX, startY);
+    } else if (pieceBefore == "queen") {
+      validPositions = validPositionsHook(startX, startY).concat(validPositionsBishop(startX, startY));
+    } else if (pieceBefore == "king") {
+      if (Math.abs(startX - endX) > 1 || Math.abs(startY - endY) > 1) {
+        return false;
+      }
+      validPositions = validPositionsHook(startX, startY).concat(validPositionsBishop(startX, startY));
+    }
+
+    if (!validPositions.includes(endX + "" + endY)) {
+      return false;
+    }
+    return true;
+  }
+
+  function canMovePiece(arrayAux: SquareProps[], positionBefore: string, positionAfter: string, pieceBefore: string) {
     const squareBeforeObj = arrayAux[Number(positionBefore)];
     const squareAfterObj = arrayAux[Number(positionAfter)];
     const color = squareBeforeObj.pieceColor;
 
-    if (
-      squareBeforeObj.pieceColor &&
-      squareAfterObj.pieceColor &&
-      squareBeforeObj.pieceColor == squareAfterObj.pieceColor
-    ) {
+    //Checks only if piece are moving acoordingly to the type
+    if (!isValidMove(squareBeforeObj.x, squareBeforeObj.y, squareAfterObj.x, squareAfterObj.y, pieceBefore)) {
       return false;
     }
-    if (pieceBefore == "pawn") {
-      if (squareAfterObj.y != squareBeforeObj.y) {
-        return false;
-      }
 
-      //Direction
+    //Specifics rules
+
+    //Dont take piece of same color
+    if (squareBeforeObj.pieceColor && squareAfterObj.pieceColor && squareBeforeObj.pieceColor == squareAfterObj.pieceColor) {
+      return false;
+    }
+
+    if (pieceBefore == "pawn") {
+      //Pawn can only go one direction depending color
       if (color == "black") {
         if (squareAfterObj.x < squareBeforeObj.x) {
           return false;
@@ -113,113 +169,6 @@ function Board() {
         if (squareAfterObj.x > squareBeforeObj.x) {
           return false;
         }
-      }
-    } else if (pieceBefore == "rook") {
-      let validPositionsHook = [];
-      let startX = squareBeforeObj.x;
-      let startY = squareBeforeObj.y;
-      for (let i = 0; i < 8; i++) {
-        validPositionsHook.push(startX + "" + (startY + i));
-        validPositionsHook.push(startX + i + "" + startY);
-        validPositionsHook.push(startX + "" + Math.abs(startY - i));
-        validPositionsHook.push(Math.abs(startX - i) + "" + startY);
-      }
-      if (
-        !validPositionsHook.includes(squareAfterObj.x + "" + squareAfterObj.y)
-      ) {
-        return false;
-      }
-    } else if (pieceBefore == "bishop") {
-      let validPositionsBishop = [];
-      let startX = squareBeforeObj.x;
-      let startY = squareBeforeObj.y;
-      for (let i = 0; i < 8; i++) {
-        validPositionsBishop.push(startX + i + "" + (startY + i));
-        validPositionsBishop.push(startX + i + "" + Math.abs(startY - i));
-        validPositionsBishop.push(
-          Math.abs(startX - i) + "" + Math.abs(startY + i)
-        );
-        validPositionsBishop.push(
-          Math.abs(startX - i) + "" + Math.abs(startY - i)
-        );
-      }
-      if (
-        !validPositionsBishop.includes(squareAfterObj.x + "" + squareAfterObj.y)
-      ) {
-        return false;
-      }
-    } else if (pieceBefore == "horse") {
-      let validPositionsHorse = [];
-      let startX = squareBeforeObj.x;
-      let startY = squareBeforeObj.y;
-
-      validPositionsHorse.push(startX + 1 + "" + (startY + 2));
-      validPositionsHorse.push(startX + 1 + "" + (startY - 2));
-      validPositionsHorse.push(startX - 1 + "" + (startY + 2));
-      validPositionsHorse.push(startX - 1 + "" + (startY - 2));
-      validPositionsHorse.push(startX + 2 + "" + (startY + 1));
-      validPositionsHorse.push(startX + 2 + "" + (startY - 1));
-      validPositionsHorse.push(startX - 2 + "" + (startY - 1));
-      validPositionsHorse.push(startX - 2 + "" + (startY + 1));
-      if (
-        !validPositionsHorse.includes(squareAfterObj.x + "" + squareAfterObj.y)
-      ) {
-        return false;
-      }
-    } else if (pieceBefore == "queen") {
-      //Otimizar isso aqui depois a queen é um hook+bishop juntos codigo repetido
-      let validPositionsQueen = [];
-      let startX = squareBeforeObj.x;
-      let startY = squareBeforeObj.y;
-
-      for (let i = 0; i < 8; i++) {
-        validPositionsQueen.push(startX + "" + (startY + i));
-        validPositionsQueen.push(startX + i + "" + startY);
-        validPositionsQueen.push(startX + "" + Math.abs(startY - i));
-        validPositionsQueen.push(Math.abs(startX - i) + "" + startY);
-      }
-
-      for (let i = 0; i < 8; i++) {
-        validPositionsQueen.push(startX + i + "" + (startY + i));
-        validPositionsQueen.push(startX + i + "" + Math.abs(startY - i));
-        validPositionsQueen.push(
-          Math.abs(startX - i) + "" + Math.abs(startY + i)
-        );
-        validPositionsQueen.push(
-          Math.abs(startX - i) + "" + Math.abs(startY - i)
-        );
-      }
-
-      if (
-        !validPositionsQueen.includes(squareAfterObj.x + "" + squareAfterObj.y)
-      ) {
-        return false;
-      }
-    } else if (pieceBefore == "king") {
-      //Otimizar isso aqui depois o rei é uma queen q só anda uma vez
-      let validPositionsKing = [];
-      let startX = squareBeforeObj.x;
-      let startY = squareBeforeObj.y;
-      for (let i = 0; i < 2; i++) {
-        validPositionsKing.push(startX + "" + (startY + i));
-        validPositionsKing.push(startX + i + "" + startY);
-        validPositionsKing.push(startX + "" + Math.abs(startY - i));
-        validPositionsKing.push(Math.abs(startX - i) + "" + startY);
-      }
-      for (let i = 0; i < 2; i++) {
-        validPositionsKing.push(startX + i + "" + (startY + i));
-        validPositionsKing.push(startX + i + "" + Math.abs(startY - i));
-        validPositionsKing.push(
-          Math.abs(startX - i) + "" + Math.abs(startY + i)
-        );
-        validPositionsKing.push(
-          Math.abs(startX - i) + "" + Math.abs(startY - i)
-        );
-      }
-      if (
-        !validPositionsKing.includes(squareAfterObj.x + "" + squareAfterObj.y)
-      ) {
-        return false;
       }
     }
     return true;
@@ -232,31 +181,17 @@ function Board() {
       arrayAux.push(square);
     });
 
-    const pieceBefore =
-      squareBefore.classList.length == 3 ? squareBefore.classList[2] : "";
+    const pieceBefore = squareBefore.classList.length == 3 ? squareBefore.classList[2] : "";
     const idSquareBefore = squareBefore.id;
     const idSquareAfter = squareAfter.id;
     var positionBefore = arrayAux?.findIndex(function (square) {
-      return (
-        square.x == Number(idSquareBefore[0]) &&
-        square.y == Number(idSquareBefore[1])
-      );
+      return square.x == Number(idSquareBefore[0]) && square.y == Number(idSquareBefore[1]);
     });
     var positionAfter = arrayAux?.findIndex(function (square) {
-      return (
-        square.x == Number(idSquareAfter[0]) &&
-        square.y == Number(idSquareAfter[1])
-      );
+      return square.x == Number(idSquareAfter[0]) && square.y == Number(idSquareAfter[1]);
     });
 
-    if (
-      canMovePiece(
-        arrayAux,
-        formatNumber(positionBefore),
-        formatNumber(positionAfter),
-        pieceBefore
-      )
-    ) {
+    if (canMovePiece(arrayAux, formatNumber(positionBefore), formatNumber(positionAfter), pieceBefore)) {
       arrayAux[positionBefore].piece = undefined;
       arrayAux[positionAfter].piece = pieceBefore;
       arrayAux[positionAfter].pieceColor = arrayAux[positionBefore].pieceColor;
@@ -288,12 +223,7 @@ function Board() {
   }
 
   return (
-    <div
-      className="board"
-      id="board"
-      onContextMenu={(e) => e.preventDefault()}
-      onClick={(e) => handleClick(e)}
-    >
+    <div className="board" id="board" onContextMenu={(e) => e.preventDefault()} onClick={(e) => handleClick(e)}>
       {squares?.map((square) => (
         <Square
           key={square.x + "" + square.y}
