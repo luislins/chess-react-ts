@@ -121,6 +121,9 @@ function Board() {
   function canMovePiece(arrayAux: SquareProps[], positionBefore: string, positionAfter: string, pieceBefore: string) {
     const squareBeforeObj = arrayAux[Number(positionBefore)];
     const squareAfterObj = arrayAux[Number(positionAfter)];
+    if (!squareBeforeObj || !squareAfterObj) {
+      return false;
+    }
     const color = squareBeforeObj.pieceColor;
     const startX = squareBeforeObj.x;
     const startY = squareBeforeObj.y;
