@@ -114,40 +114,14 @@ function Board() {
     return validPositionsHorse;
   }
 
-  function isValidMove(startX: number, startY: number, endX: number, endY: number, pieceBefore: string) {
-    let validPositions: string[] = [];
-    if (pieceBefore == "pawn") {
-      if (Math.abs(startX - endX) > 1 || Math.abs(startY - endY) > 1) {
-        return false;
-      }
-      validPositions = validPositionsHook(startX, startY);
-    } else if (pieceBefore == "rook") {
-      validPositions = validPositionsHook(startX, startY);
-    } else if (pieceBefore == "bishop") {
-      validPositions = validPositionsBishop(startX, startY);
-    } else if (pieceBefore == "horse") {
-      validPositions = validPositionsHorse(startX, startY);
-    } else if (pieceBefore == "queen") {
-      validPositions = validPositionsHook(startX, startY).concat(validPositionsBishop(startX, startY));
-    } else if (pieceBefore == "king") {
-      if (Math.abs(startX - endX) > 1 || Math.abs(startY - endY) > 1) {
-        return false;
-      }
-      validPositions = validPositionsHook(startX, startY).concat(validPositionsBishop(startX, startY));
-    }
-
-    if (!validPositions.includes(endX + "" + endY)) {
-      return false;
-    }
-    return true;
+  function validPositionsKing(startX: number, startY: number) {
+    return validPositionsHook(startX, startY).concat(validPositionsBishop(startX, startY));
   }
 
   function canMovePiece(arrayAux: SquareProps[], positionBefore: string, positionAfter: string, pieceBefore: string) {
     const squareBeforeObj = arrayAux[Number(positionBefore)];
     const squareAfterObj = arrayAux[Number(positionAfter)];
     const color = squareBeforeObj.pieceColor;
-
-    //Checks only if piece are moving acoordingly to the type
     const startX = squareBeforeObj.x;
     const startY = squareBeforeObj.y;
     const endX = squareAfterObj.x;
@@ -182,6 +156,7 @@ function Board() {
           return false;
         }
       }
+
       validPositions = validPositionsHook(startX, startY);
     } else if (pieceBefore == "rook") {
       validPositions = validPositionsHook(startX, startY);
@@ -195,7 +170,7 @@ function Board() {
       if (Math.abs(startX - endX) > 1 || Math.abs(startY - endY) > 1) {
         return false;
       }
-      validPositions = validPositionsHook(startX, startY).concat(validPositionsBishop(startX, startY));
+      validPositions = validPositionsKing(startX, startY);
     }
 
     if (!validPositions.includes(endX + "" + endY)) {
