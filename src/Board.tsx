@@ -51,6 +51,7 @@ function Board() {
   const tamanho = 8;
   let activeSquare: HTMLElement | null = null;
   const [squares, setSquares] = useState<SquareProps[]>([]);
+  const [isWhiteTurn, setIsWhiteTurn] = useState<boolean>();
   useEffect(() => {
     let board = [];
     for (let i = 0; i < tamanho; i++) {
@@ -65,6 +66,7 @@ function Board() {
       }
     }
     setSquares(board);
+    setIsWhiteTurn(true);
   }, []);
 
   function getPiece(x: number, y: number) {
@@ -118,19 +120,30 @@ function Board() {
     return validPositionsHook(startX, startY).concat(validPositionsBishop(startX, startY));
   }
 
-  function canMovePiece(arrayAux: SquareProps[], positionBefore: string, positionAfter: string, pieceBefore: string) {
+  function checkIfPieceMovementOverlaps(pieceType: string, startX: number, startY: number, endX: number, endY: number) {
+    let squareObject = squares?.find(function (square) {
+      return square.x == Number(startX) && square.y == Number(startY);
+    });
+  }
+
+  function canMovePiece(arrayAux: SquareProps[], positionBefore: string, positionAfter: string) {
     const squareBeforeObj = arrayAux[Number(positionBefore)];
     const squareAfterObj = arrayAux[Number(positionAfter)];
     if (!squareBeforeObj || !squareAfterObj) {
       return false;
     }
-    const color = squareBeforeObj.pieceColor;
+
     const startX = squareBeforeObj.x;
     const startY = squareBeforeObj.y;
     const endX = squareAfterObj.x;
     const endY = squareAfterObj.y;
 
     //General rules
+    if (squareBeforeObj.pieceColor == "white" && !isWhiteTurn) {
+      return false;
+    } else if (squareBeforeObj.pieceColor == "black" && isWhiteTurn) {
+      return false;
+    }
 
     //Dont take piece of same color
     if (squareBeforeObj.pieceColor && squareAfterObj.pieceColor && squareBeforeObj.pieceColor == squareAfterObj.pieceColor) {
@@ -139,40 +152,57 @@ function Board() {
 
     //Specific Rules per type
     let validPositions: string[] = [];
-    if (pieceBefore == "pawn") {
+    if (squareBeforeObj.piece == "pawn") {
       const X = Number(startX + "" + startY);
-      const moveQuantity = (color == "white" && X >= 60 && X <= 67) || (color == "black" && X >= 10 && X <= 17) ? 2 : 1;
-      console.log(moveQuantity);
-      //Cant move horizontally
-      if (endY != startY) {
-        return false;
-      }
+      const moveQuantity =
+        (squareBeforeObj.pieceColor == "white" && X >= 60 && X <= 67) || (squareBeforeObj.pieceColor == "black" && X >= 10 && X <= 17) ? 2 : 1;
+
       // Can move only one time WIP or two time if first move
       if (Math.abs(startX - endX) > moveQuantity || Math.abs(startY - endY) > moveQuantity) {
         return false;
       }
-
       // Move in only one direction depending color
-      if (color == "black") {
+      if (squareBeforeObj.pieceColor == "black") {
         if (endX < startX) {
           return false;
+        } //Check if piece ahead doesnt contains piece
+        else if (squareAfterObj.piece != undefined && endX == startX + 1 && endY == startY) {
+          return false;
         }
-      } else if (color == "white") {
+      } else if (squareBeforeObj.pieceColor == "white") {
         if (endX > startX) {
+          return false;
+        } //Check if piece ahead doesnt contains piece
+        else if (squareAfterObj.piece != undefined && endX == startX - 1 && endY == startY) {
           return false;
         }
       }
 
       validPositions = validPositionsHook(startX, startY);
-    } else if (pieceBefore == "rook") {
+
+      if (squareAfterObj.piece !== undefined) {
+        if ((squareBeforeObj.pieceColor == "white" && startX - 1 == endX && startY + 1 == endY) || (startX - 1 == endX && startY - 1 == endY)) {
+          validPositions.push(endX + "" + endY);
+        } else if (
+          (squareBeforeObj.pieceColor == "black" && startX + 1 == endX && startY - 1 == endY) ||
+          (startX + 1 == endX && startY + 1 == endY)
+        ) {
+          validPositions.push(endX + "" + endY);
+        }
+      } else if (endY != startY) {
+        //Cant move horizontallyQ
+        return false;
+      }
+      //Checar en passant
+    } else if (squareBeforeObj.piece == "rook") {
       validPositions = validPositionsHook(startX, startY);
-    } else if (pieceBefore == "bishop") {
+    } else if (squareBeforeObj.piece == "bishop") {
       validPositions = validPositionsBishop(startX, startY);
-    } else if (pieceBefore == "horse") {
+    } else if (squareBeforeObj.piece == "horse") {
       validPositions = validPositionsHorse(startX, startY);
-    } else if (pieceBefore == "queen") {
+    } else if (squareBeforeObj.piece == "queen") {
       validPositions = validPositionsHook(startX, startY).concat(validPositionsBishop(startX, startY));
-    } else if (pieceBefore == "king") {
+    } else if (squareBeforeObj.piece == "king") {
       if (Math.abs(startX - endX) > 1 || Math.abs(startY - endY) > 1) {
         return false;
       }
@@ -182,35 +212,30 @@ function Board() {
     if (!validPositions.includes(endX + "" + endY)) {
       return false;
     }
+    setIsWhiteTurn(!isWhiteTurn);
     return true;
   }
 
   function movePiece(squareBefore: HTMLElement, squareAfter: HTMLElement) {
-    const arrayAux: SquareProps[] = [];
-
-    squares.map((square) => {
-      arrayAux.push(square);
-    });
+    const arrayAux: SquareProps[] = [...squares];
 
     const pieceBefore = squareBefore.classList.length == 3 ? squareBefore.classList[2] : "";
     const idSquareBefore = squareBefore.id;
     const idSquareAfter = squareAfter.id;
-    var positionBefore = arrayAux?.findIndex(function (square) {
+    let positionBefore = arrayAux?.findIndex(function (square) {
       return square.x == Number(idSquareBefore[0]) && square.y == Number(idSquareBefore[1]);
     });
-    var positionAfter = arrayAux?.findIndex(function (square) {
+    let positionAfter = arrayAux?.findIndex(function (square) {
       return square.x == Number(idSquareAfter[0]) && square.y == Number(idSquareAfter[1]);
     });
 
-    if (canMovePiece(arrayAux, formatNumber(positionBefore), formatNumber(positionAfter), pieceBefore)) {
+    if (canMovePiece(arrayAux, formatNumber(positionBefore), formatNumber(positionAfter))) {
       arrayAux[positionBefore].piece = undefined;
       arrayAux[positionAfter].piece = pieceBefore;
       arrayAux[positionAfter].pieceColor = arrayAux[positionBefore].pieceColor;
       arrayAux[positionBefore].pieceColor = undefined;
       setSquares(arrayAux);
-      console.log("mexi");
     } else {
-      console.log("nao mexi");
     }
   }
 
@@ -234,18 +259,21 @@ function Board() {
   }
 
   return (
-    <div className="board" id="board" onContextMenu={(e) => e.preventDefault()} onClick={(e) => handleClick(e)}>
-      {squares?.map((square) => (
-        <Square
-          key={square.x + "" + square.y}
-          x={square.x}
-          y={square.y}
-          piece={square.piece}
-          pieceColor={square.pieceColor}
-          backgroundColor={square.backgroundColor}
-        />
-      ))}
-    </div>
+    <>
+      <div className="board" id="board" onContextMenu={(e) => e.preventDefault()} onClick={(e) => handleClick(e)}>
+        {squares?.map((square) => (
+          <Square
+            key={square.x + "" + square.y}
+            x={square.x}
+            y={square.y}
+            piece={square.piece}
+            pieceColor={square.pieceColor}
+            backgroundColor={square.backgroundColor}
+          />
+        ))}
+      </div>
+      <div>Turno: {isWhiteTurn ? "branco" : "preto"}</div>
+    </>
   );
 }
 
