@@ -81,15 +81,29 @@ function Board() {
     }
   }
 
-  function validPositionsHook(startX: number, startY: number) {
+  function validPositionsHook(startX: number, startY: number, endX: number, endY: number) {
     let validPositionsHook = [];
-    for (let i = 0; i < 8; i++) {
-      validPositionsHook.push(startX + "" + (startY + i));
-      validPositionsHook.push(startX + i + "" + startY);
-      validPositionsHook.push(startX + "" + Math.abs(startY - i));
-      validPositionsHook.push(Math.abs(startX - i) + "" + startY);
+    let parada = 8;
+    let onlyVertical = false;
+    // Fiz essa alteração pra pegar a contagem certa de quadrados , ele tava sendo pegando por força bruta todos possiveis
+    // TODO : fazer isso nas outras peças
+    if (endX == startX) {
+      onlyVertical = false;
+      parada = Math.abs(startY - endY) + 1;
+    } else if (endY == startY) {
+      onlyVertical = true;
+      parada = Math.abs(startX - endX) + 1;
     }
-    return validPositionsHook;
+    for (let i = 1; i < parada; i++) {
+      if (onlyVertical) {
+        validPositionsHook.push(startX + i + "" + startY);
+        validPositionsHook.push(Math.abs(startX - i) + "" + startY);
+      } else {
+        validPositionsHook.push(startX + "" + Math.abs(startY - i));
+        validPositionsHook.push(startX + "" + (startY + i));
+      }
+    }
+    return [...new Set(validPositionsHook)];
   }
 
   function validPositionsBishop(startX: number, startY: number) {
@@ -116,14 +130,64 @@ function Board() {
     return validPositionsHorse;
   }
 
-  function validPositionsKing(startX: number, startY: number) {
-    return validPositionsHook(startX, startY).concat(validPositionsBishop(startX, startY));
+  function validPositionsKing(startX: number, startY: number, endX: number, endY: number) {
+    return validPositionsHook(startX, startY, endX, endY).concat(validPositionsBishop(startX, startY));
   }
 
-  function checkIfPieceMovementOverlaps(pieceType: string, startX: number, startY: number, endX: number, endY: number) {
-    let squareObject = squares?.find(function (square) {
-      return square.x == Number(startX) && square.y == Number(startY);
+  function checkIfPieceMovementOverlaps(
+    validPositions: string[],
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    piece: string | undefined
+  ) {
+    if (piece && piece == "horse") {
+      return false;
+    }
+    let retorno = false;
+    let foiPraCima = false;
+    let foiPraDireita = false;
+    // só pra hook , bishop complica
+    if (endX < startX) {
+      foiPraCima = true;
+    } else if (endX == startX) {
+      if (endY > startY) {
+        foiPraDireita = true;
+      }
+    }
+
+    validPositions.map((position) => {
+      if (position != startX + "" + startY) {
+        let squareObject = squares?.find(function (square) {
+          return square.x == Number(position[0]) && square.y == Number(position[1]);
+        });
+
+        if (foiPraCima && Number(position[0]) < Number(startX)) {
+          if (position != endX + "" + endY && squareObject?.piece != undefined) {
+            console.log("overlap");
+            retorno = true;
+          }
+        } else if (!foiPraCima && Number(position[0]) > Number(startX)) {
+          if (position != endX + "" + endY && squareObject?.piece != undefined) {
+            console.log("overlap");
+            retorno = true;
+          }
+        } else if (foiPraDireita && Number(position[1]) > Number(startY)) {
+          if (position != endX + "" + endY && squareObject?.piece != undefined) {
+            console.log("overlap");
+            retorno = true;
+          }
+        } else if (!foiPraDireita && Number(position[1]) < Number(startY)) {
+          if (position != endX + "" + endY && squareObject?.piece != undefined) {
+            console.log("overlap");
+            retorno = true;
+          }
+        }
+      }
     });
+
+    return retorno;
   }
 
   function canMovePiece(arrayAux: SquareProps[], positionBefore: string, positionAfter: string) {
@@ -139,11 +203,11 @@ function Board() {
     const endY = squareAfterObj.y;
 
     //General rules
-    if (squareBeforeObj.pieceColor == "white" && !isWhiteTurn) {
-      return false;
-    } else if (squareBeforeObj.pieceColor == "black" && isWhiteTurn) {
-      return false;
-    }
+    // if (squareBeforeObj.pieceColor == "white" && !isWhiteTurn) {
+    //   return false;
+    // } else if (squareBeforeObj.pieceColor == "black" && isWhiteTurn) {
+    //   return false;
+    // }
 
     //Dont take piece of same color
     if (squareBeforeObj.pieceColor && squareAfterObj.pieceColor && squareBeforeObj.pieceColor == squareAfterObj.pieceColor) {
@@ -177,8 +241,7 @@ function Board() {
           return false;
         }
       }
-
-      validPositions = validPositionsHook(startX, startY);
+      validPositions = validPositionsHook(startX, startY, endX, endY);
 
       if (squareAfterObj.piece !== undefined) {
         if ((squareBeforeObj.pieceColor == "white" && startX - 1 == endX && startY + 1 == endY) || (startX - 1 == endX && startY - 1 == endY)) {
@@ -195,21 +258,25 @@ function Board() {
       }
       //Checar en passant
     } else if (squareBeforeObj.piece == "rook") {
-      validPositions = validPositionsHook(startX, startY);
+      validPositions = validPositionsHook(startX, startY, endX, endY);
+      console.log(validPositions);
     } else if (squareBeforeObj.piece == "bishop") {
       validPositions = validPositionsBishop(startX, startY);
     } else if (squareBeforeObj.piece == "horse") {
       validPositions = validPositionsHorse(startX, startY);
     } else if (squareBeforeObj.piece == "queen") {
-      validPositions = validPositionsHook(startX, startY).concat(validPositionsBishop(startX, startY));
+      validPositions = validPositionsHook(startX, startY, endX, endY).concat(validPositionsBishop(startX, startY));
     } else if (squareBeforeObj.piece == "king") {
       if (Math.abs(startX - endX) > 1 || Math.abs(startY - endY) > 1) {
         return false;
       }
-      validPositions = validPositionsKing(startX, startY);
+      validPositions = validPositionsKing(startX, startY, endX, endY);
     }
 
     if (!validPositions.includes(endX + "" + endY)) {
+      return false;
+    }
+    if (squareBeforeObj.piece != "pawn" && checkIfPieceMovementOverlaps(validPositions, startX, startY, endX, endY, squareBeforeObj.piece)) {
       return false;
     }
     setIsWhiteTurn(!isWhiteTurn);
