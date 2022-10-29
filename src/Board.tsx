@@ -246,12 +246,12 @@ function Board() {
     const endX = squareAfterObj.x;
     const endY = squareAfterObj.y;
 
-    //General rules
-    // if (squareBeforeObj.pieceColor == "white" && !isWhiteTurn) {
-    //   return false;
-    // } else if (squareBeforeObj.pieceColor == "black" && isWhiteTurn) {
-    //   return false;
-    // }
+    // General rules
+    if (squareBeforeObj.pieceColor == "white" && !isWhiteTurn) {
+      return false;
+    } else if (squareBeforeObj.pieceColor == "black" && isWhiteTurn) {
+      return false;
+    }
 
     //Dont take piece of same color
     if (squareBeforeObj.pieceColor && squareAfterObj.pieceColor && squareBeforeObj.pieceColor == squareAfterObj.pieceColor) {
