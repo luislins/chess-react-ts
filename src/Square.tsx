@@ -43,7 +43,6 @@ function Square(props: SquareProps) {
       }}
       className={`square pieceImage ${piece ? piece : ""}`}
     >
-      {props.x + "" + props.y}
       {indicator && (
         <div
           style={{
