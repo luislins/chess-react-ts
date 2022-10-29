@@ -85,8 +85,6 @@ function Board() {
     let validPositionsHook = [];
     let parada = 8;
     let onlyVertical = false;
-    // Fiz essa alteração pra pegar a contagem certa de quadrados , ele tava sendo pegando por força bruta todos possiveis
-    // TODO : fazer isso nas outras peças
     if (endX == startX) {
       onlyVertical = false;
       parada = Math.abs(startY - endY) + 1;
@@ -106,15 +104,30 @@ function Board() {
     return [...new Set(validPositionsHook)];
   }
 
-  function validPositionsBishop(startX: number, startY: number) {
+  function validPositionsBishop(startX: number, startY: number, endX: number, endY: number) {
     let validPositionsBishop = [];
-    for (let i = 0; i < 8; i++) {
-      validPositionsBishop.push(startX + i + "" + (startY + i));
-      validPositionsBishop.push(startX + i + "" + Math.abs(startY - i));
-      validPositionsBishop.push(Math.abs(startX - i) + "" + Math.abs(startY + i));
-      validPositionsBishop.push(Math.abs(startX - i) + "" + Math.abs(startY - i));
+    let foiPraEsquerda = false;
+    let foiPraCima = false;
+    let parada = 8;
+    if (startY > endY) {
+      foiPraEsquerda = true;
     }
-    return validPositionsBishop;
+    if (startX > endX) {
+      foiPraCima = true;
+    }
+    parada = Math.abs(startY - endY) + 1;
+    for (let i = 0; i < parada; i++) {
+      if (foiPraEsquerda) {
+        validPositionsBishop.push(startX + i + "" + Math.abs(startY - i));
+        validPositionsBishop.push(Math.abs(startX - i) + "" + Math.abs(startY - i));
+      } else {
+        validPositionsBishop.push(startX + i + "" + (startY + i));
+        validPositionsBishop.push(Math.abs(startX - i) + "" + Math.abs(startY + i));
+      }
+    }
+
+    let validPositionsBishopFiltered = validPositionsBishop.filter((p) => Number(p) < 77 && Number(p) > 0);
+    return [...new Set(validPositionsBishopFiltered)];
   }
 
   function validPositionsHorse(startX: number, startY: number) {
@@ -131,7 +144,7 @@ function Board() {
   }
 
   function validPositionsKing(startX: number, startY: number, endX: number, endY: number) {
-    return validPositionsHook(startX, startY, endX, endY).concat(validPositionsBishop(startX, startY));
+    return validPositionsHook(startX, startY, endX, endY).concat(validPositionsBishop(startX, startY, endX, endY));
   }
 
   function checkIfPieceMovementOverlaps(
@@ -148,40 +161,71 @@ function Board() {
     let retorno = false;
     let foiPraCima = false;
     let foiPraDireita = false;
-    // só pra hook , bishop complica
-    if (endX < startX) {
-      foiPraCima = true;
-    } else if (endX == startX) {
-      if (endY > startY) {
-        foiPraDireita = true;
+    if (piece == "queen") {
+      if (startX != endX && startY != endY) {
+        piece = "bishop";
+      } else {
+        piece = "rook";
       }
     }
 
-    validPositions.map((position) => {
+    if (piece == "bishop") {
+      if (startY < endY) {
+        foiPraDireita = true;
+      }
+      if (startX > endX) {
+        foiPraCima = true;
+      }
+    } else if (piece == "rook") {
+      if (endX < startX) {
+        foiPraCima = true;
+      } else if (endX == startX) {
+        if (endY > startY) {
+          foiPraDireita = true;
+        }
+      }
+    }
+
+    validPositions.forEach((position) => {
       if (position != startX + "" + startY) {
         let squareObject = squares?.find(function (square) {
           return square.x == Number(position[0]) && square.y == Number(position[1]);
         });
-
-        if (foiPraCima && Number(position[0]) < Number(startX)) {
-          if (position != endX + "" + endY && squareObject?.piece != undefined) {
-            console.log("overlap");
-            retorno = true;
+        if (piece == "bishop") {
+          if (foiPraCima && !foiPraDireita && Number(position[0]) < Number(startX) && Number(position[1]) < Number(startY)) {
+            if (position != endX + "" + endY && squareObject?.piece != undefined) {
+              retorno = true;
+            }
+          } else if (!foiPraCima && !foiPraDireita && Number(position[0]) > Number(startX) && Number(position[1]) < Number(startY)) {
+            if (position != endX + "" + endY && squareObject?.piece != undefined) {
+              retorno = true;
+            }
+          } else if (!foiPraCima && foiPraDireita && Number(position[0]) > Number(startX) && Number(position[1]) > Number(startY)) {
+            if (position != endX + "" + endY && squareObject?.piece != undefined) {
+              retorno = true;
+            }
+          } else if (foiPraCima && foiPraDireita && Number(position[0]) < Number(startX) && Number(position[1]) > Number(startY)) {
+            if (position != endX + "" + endY && squareObject?.piece != undefined) {
+              retorno = true;
+            }
           }
-        } else if (!foiPraCima && Number(position[0]) > Number(startX)) {
-          if (position != endX + "" + endY && squareObject?.piece != undefined) {
-            console.log("overlap");
-            retorno = true;
-          }
-        } else if (foiPraDireita && Number(position[1]) > Number(startY)) {
-          if (position != endX + "" + endY && squareObject?.piece != undefined) {
-            console.log("overlap");
-            retorno = true;
-          }
-        } else if (!foiPraDireita && Number(position[1]) < Number(startY)) {
-          if (position != endX + "" + endY && squareObject?.piece != undefined) {
-            console.log("overlap");
-            retorno = true;
+        } else {
+          if (foiPraCima && Number(position[0]) < Number(startX)) {
+            if (position != endX + "" + endY && squareObject?.piece != undefined) {
+              retorno = true;
+            }
+          } else if (!foiPraCima && Number(position[0]) > Number(startX)) {
+            if (position != endX + "" + endY && squareObject?.piece != undefined) {
+              retorno = true;
+            }
+          } else if (foiPraDireita && Number(position[1]) > Number(startY)) {
+            if (position != endX + "" + endY && squareObject?.piece != undefined) {
+              retorno = true;
+            }
+          } else if (!foiPraDireita && Number(position[1]) < Number(startY)) {
+            if (position != endX + "" + endY && squareObject?.piece != undefined) {
+              retorno = true;
+            }
           }
         }
       }
@@ -259,13 +303,13 @@ function Board() {
       //Checar en passant
     } else if (squareBeforeObj.piece == "rook") {
       validPositions = validPositionsHook(startX, startY, endX, endY);
-      console.log(validPositions);
     } else if (squareBeforeObj.piece == "bishop") {
-      validPositions = validPositionsBishop(startX, startY);
+      validPositions = validPositionsBishop(startX, startY, endX, endY);
     } else if (squareBeforeObj.piece == "horse") {
       validPositions = validPositionsHorse(startX, startY);
     } else if (squareBeforeObj.piece == "queen") {
-      validPositions = validPositionsHook(startX, startY, endX, endY).concat(validPositionsBishop(startX, startY));
+      validPositions = validPositionsHook(startX, startY, endX, endY).concat(validPositionsBishop(startX, startY, endX, endY));
+      console.log(validPositions);
     } else if (squareBeforeObj.piece == "king") {
       if (Math.abs(startX - endX) > 1 || Math.abs(startY - endY) > 1) {
         return false;
