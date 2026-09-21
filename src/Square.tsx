@@ -1,56 +1,31 @@
-import { useEffect, useState } from "react";
+import { pieceAssetName } from "./chess";
+import { Piece } from "./chess/types";
 import { COLORS } from "./colors";
 
 type SquareProps = {
-  x: number;
-  y: number;
-  backgroundColor: string;
-  piece: string | undefined;
-  pieceColor: string | undefined;
+  piece: Piece | null;
+  isLight: boolean;
+  isSelected: boolean;
+  isLegalTarget: boolean;
+  onClick: () => void;
 };
 
-function Square(props: SquareProps) {
-  const [piece, setPiece] = useState<string | undefined>();
-  const [pieceColor, setPieceColor] = useState<string | undefined>();
-  const [backgroundColor, setBackgroundColor] = useState<string | undefined>("");
-  const [indicator, showIndicator] = useState<boolean>(false);
-
-  useEffect(() => {
-    setPiece(props.piece);
-    setPieceColor(props.pieceColor);
-    setBackgroundColor(props.backgroundColor);
-  }, [props.piece, props.pieceColor]);
-
-  function highlightPieceRightClick() {
-    const redColorBg = backgroundColor == COLORS.light_square_green ? "#d46c51" : "#ec7e6a";
-    setBackgroundColor(backgroundColor != redColorBg ? redColorBg : props.backgroundColor);
-  }
-  function highlightPieceLeftClick() {
-    setBackgroundColor(backgroundColor != COLORS.yellow_squared_active ? COLORS.yellow_squared_active : props.backgroundColor);
-    //provavelmtne com context
-  }
-
-  const hintColor = backgroundColor == COLORS.light_square_green ? "#d6d6bd" : "#6a874d";
+function Square({ piece, isLight, isSelected, isLegalTarget, onClick }: SquareProps) {
+  const baseColor = isLight ? COLORS.light_square_green : COLORS.dark_square_green;
+  const backgroundColor = isSelected ? COLORS.yellow_squared_active : baseColor;
+  const hintColor = isLight ? COLORS.hint_color_light : COLORS.hint_color_dark;
 
   return (
     <div
-      onContextMenu={() => highlightPieceRightClick()}
-      // onClick={() => highlightPieceLeftClick()}
-      id={props.x + "" + props.y}
+      onClick={onClick}
+      onContextMenu={(e) => e.preventDefault()}
       style={{
-        backgroundImage: piece && pieceColor ? `url(/assets/pieceImages/${piece + "_" + pieceColor}.png)` : "",
-        backgroundColor: backgroundColor,
+        backgroundImage: piece ? `url(/assets/pieceImages/${pieceAssetName(piece.type)}_${piece.color}.png)` : undefined,
+        backgroundColor,
       }}
-      className={`square pieceImage ${piece ? piece : ""}`}
+      className="square pieceImage"
     >
-      {indicator && (
-        <div
-          style={{
-            backgroundColor: hintColor,
-          }}
-          className="indicator"
-        ></div>
-      )}
+      {isLegalTarget && <div style={{ backgroundColor: hintColor }} className="indicator" />}
     </div>
   );
 }
