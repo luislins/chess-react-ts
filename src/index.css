@@ -8,6 +8,7 @@ body {
 
 .board-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   background-color: #312e2b;
@@ -35,17 +36,55 @@ body {
   background-size: 80px;
 }
 
-.white {
-  color: white;
-}
-
-.black {
-  color: black;
-}
-
 .indicator {
   height: 30%;
   width: 30%;
-  background-color: #d6d6bd;
   border-radius: 100%;
+  pointer-events: none;
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  color: white;
+  font-family: sans-serif;
+}
+
+.status-bar button {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.promotion-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.promotion-panel {
+  background-color: #312e2b;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  text-align: center;
+  font-family: sans-serif;
+}
+
+.promotion-choices {
+  display: flex;
+  gap: 8px;
+}
+
+.promotion-choice {
+  width: 64px;
+  height: 64px;
+  background-color: #ebecd0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
