@@ -5,7 +5,6 @@ scratch — no chess library. Click a piece, click a destination; illegal moves
 are refused.
 
 <!-- SCREENSHOT: add docs/board.png -->
-<!-- LIVE DEMO: add the deploy URL here and in the repo's About field -->
 
 ## What it does
 
